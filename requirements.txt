@@ -1,0 +1,10 @@
+# Tea Leaves Weighing & Smart Records System — pinned dependencies
+# Owner: H.G.P.C. Sagara (PM & Integration Dev)
+
+Flask==3.0.2
+mysql-connector-python==9.1.0
+python-dotenv==1.0.1
+
+# Production WSGI server used by the cloud host (Render/Railway).
+# Not required for local development on Windows.
+gunicorn==21.2.0

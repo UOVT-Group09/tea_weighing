@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment / secrets — never commit real credentials
+.env
+*.local.env
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs / runtime
+*.log
+instance/
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/

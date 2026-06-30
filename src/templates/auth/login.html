@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Operator Login{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h4 class="mb-3 text-center" style="color:#1F3864;">Operator Login</h4>
+        <p class="text-muted text-center small mb-4">
+          Sign in to record weights and manage collection.
+        </p>
+        <form method="post" action="{{ url_for('auth.login') }}">
+          <div class="mb-3">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-control" id="username" name="username" autofocus required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-control" id="password" name="password" type="password" required>
+          </div>
+          <button class="btn w-100 text-white" style="background-color:#1F3864;" type="submit">
+            Log in
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

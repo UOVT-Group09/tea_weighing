@@ -1,0 +1,21 @@
+/* Shared styles — integration skeleton by H.G.P.C. Sagara.
+   Brand colours match the project plan: navy #1F3864, green #548235. */
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.card {
+  border: none;
+  border-radius: 0.6rem;
+}
+
+.card a:hover .card,
+a:hover > .card {
+  box-shadow: 0 0.25rem 0.75rem rgba(31, 56, 100, 0.15) !important;
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+footer {
+  border-top: 1px solid #e6e6e6;
+}

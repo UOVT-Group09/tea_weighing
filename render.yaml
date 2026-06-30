@@ -1,0 +1,33 @@
+# Render deployment blueprint — owner: H.G.P.C. Sagara (PM & Integration Dev)
+# Creates the web service and a managed MySQL database.
+# Commit this file and point Render at the repo to deploy in one click.
+
+services:
+  - type: web
+    name: tea-weighing
+    runtime: python
+    rootDir: tea_weighing
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEFAULT_OPERATOR_USERNAME
+        sync: false
+      - key: DEFAULT_OPERATOR_PASSWORD
+        sync: false
+      # Database connection variables — set these in the Render dashboard to
+      # point at the managed MySQL instance (or paste a single DATABASE_URL).
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

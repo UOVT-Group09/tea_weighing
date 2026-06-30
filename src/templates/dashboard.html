@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 style="color:#1F3864;">Dashboard</h3>
+  {% if db_ok %}
+    <span class="badge bg-success">Database connected</span>
+  {% else %}
+    <span class="badge bg-warning text-dark">Database offline — check .env / MySQL</span>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  {% set cards = [
+    ('Farmers', 'farmers.index', 'Register and manage farmers'),
+    ('Weight Entry', 'weights.index', 'Record daily weights with auto error check'),
+    ('Payments & Wages', 'payments.index', 'Farmer payments and plucker wages'),
+    ('Attendance', 'attendance.index', 'Mark plucker attendance'),
+    ('Reports & Trend', 'reports.index', 'Daily reports and supply trend'),
+  ] %}
+  {% for title, endpoint, desc in cards %}
+  <div class="col-md-4">
+    <a class="text-decoration-none" href="{{ url_for(endpoint) }}">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title" style="color:#548235;">{{ title }}</h5>
+          <p class="card-text text-muted small mb-0">{{ desc }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
