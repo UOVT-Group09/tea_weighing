@@ -1,27 +1,78 @@
-"""Database schema definition.
+"""Database schema definition for the Tea Leaves Weighing & Smart Records System."""
 
-Owner: D.M.N.D. Dissanayaka (DB & Payments).
+from src.db import get_db_connection
 
-INTEGRATION NOTE from H.G.P.C. Sagara: the schema lives here as the single
-source of truth. The data model from guideline §4.1 is captured below as
-``SCHEMA_SQL`` so the integration layer and seed scripts can create the
-database in one call. The operator/auth table is created separately in auth.py.
-
-Tables to implement (guideline §4.1):
-    farmer        (farmer_id PK, name, contact)
-    weight_record (record_id PK, farmer_id FK, date, weight_kg, flagged)
-    payment       (payment_id PK, farmer_id FK, period, total_kg, amount)
-    plucker       (plucker_id PK, name, daily_rate)
-    attendance    (attendance_id PK, plucker_id FK, date, present)
-    price_config  (price_id PK, price_per_kg, effective_date)
-"""
-
-# Owner D.M.N.D. Dissanayaka: fill in the CREATE TABLE statements here.
+# Fully normalised schema per system specification requirements
 SCHEMA_SQL = """
--- TODO (Dissanayaka): full normalised schema per guideline §4.1.
+CREATE TABLE IF NOT EXISTS farmer (
+    farmer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact VARCHAR(15) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS price_config (
+    price_id INT AUTO_INCREMENT PRIMARY KEY,
+    price_per_kg DECIMAL(10, 2) NOT NULL,
+    effective_date DATE NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS weight_record (
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
+    farmer_id INT,
+    date DATE NOT NULL,
+    weight_kg DECIMAL(10, 2) NOT NULL,
+    flagged BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (farmer_id) REFERENCES farmer(farmer_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS plucker (
+    plucker_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    daily_rate DECIMAL(10, 2) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS attendance (
+    attendance_id INT AUTO_INCREMENT PRIMARY KEY,
+    plucker_id INT,
+    date DATE NOT NULL,
+    present BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (plucker_id) REFERENCES plucker(plucker_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS payment (
+    payment_id INT AUTO_INCREMENT PRIMARY KEY,
+    farmer_id INT,
+    period VARCHAR(50) NOT NULL,
+    total_kg DECIMAL(10, 2) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (farmer_id) REFERENCES farmer(farmer_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 """
 
 
 def init_schema():
-    """Create all tables. Implemented by the database owner."""
-    raise NotImplementedError("Owner: D.M.N.D. Dissanayaka — implement schema (§4.1)")
+    """Initialise and create all structured database tables."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Executes all schema creation queries safely
+        for result in cursor.execute(SCHEMA_SQL, multi=True):
+            pass
+            
+        conn.commit()
+        print("[Database] All tables initialised successfully!")
+        
+    except Exception as e:
+        print(f"[Database Error] Failed to initialize schema: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+if __name__ == "__main__":
+    init_schema()
