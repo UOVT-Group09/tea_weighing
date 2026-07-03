@@ -16,7 +16,7 @@ Tables implemented (guideline §4.1):
     price_config  (price_id PK, price_per_kg, effective_date)
 """
 
-from .db import DatabaseError, execute, get_db
+from .db import DatabaseError, execute
 
 SCHEMA_STATEMENTS = (
     """
@@ -95,7 +95,6 @@ def init_schema():
     so the app can still boot and show the "database offline" banner.
     """
     try:
-        get_db()
         for statement in SCHEMA_STATEMENTS:
             execute(statement)
         return True

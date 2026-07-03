@@ -12,9 +12,10 @@ plain text.
 
 from functools import wraps
 
+import logging
+
 from flask import (
     Blueprint,
-    current_app,
     flash,
     g,
     redirect,
@@ -26,7 +27,9 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .config import Config
-from .db import DatabaseError, execute, get_db, query
+from .db import DatabaseError, execute, query
+
+log = logging.getLogger(__name__)
 
 bp = Blueprint("auth", __name__)
 
@@ -52,7 +55,6 @@ def ensure_operator_table():
     is unreachable (the app still boots so the rest can be demoed).
     """
     try:
-        get_db()
         execute(CREATE_OPERATOR_TABLE)
         existing = query("SELECT COUNT(*) AS n FROM operator", one=True)
         if existing and existing["n"] == 0:
@@ -63,12 +65,10 @@ def ensure_operator_table():
                     generate_password_hash(Config.DEFAULT_OPERATOR_PASSWORD),
                 ),
             )
-            current_app.logger.info(
-                "Seeded default operator '%s'.", Config.DEFAULT_OPERATOR_USERNAME
-            )
+            log.info("Seeded default operator '%s'.", Config.DEFAULT_OPERATOR_USERNAME)
         return True
     except DatabaseError as exc:
-        current_app.logger.warning("Operator table not ready: %s", exc)
+        log.warning("Operator table not ready: %s", exc)
         return False
 
 

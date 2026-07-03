@@ -122,7 +122,6 @@ cp .env.example .env        # macOS/Linux
 |----------|---------|
 | `SECRET_KEY` | Flask session signing key |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | MySQL connection |
-| `DATABASE_URL` | Optional single-URL alternative (used by cloud hosts) |
 | `DEFAULT_OPERATOR_USERNAME` / `DEFAULT_OPERATOR_PASSWORD` | Operator seeded on first run |
 
 `.env` is git-ignored — **never commit real credentials.**

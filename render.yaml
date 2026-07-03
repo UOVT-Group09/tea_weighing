@@ -20,7 +20,7 @@ services:
       - key: DEFAULT_OPERATOR_PASSWORD
         sync: false
       # Database connection variables — set these in the Render dashboard to
-      # point at the managed MySQL instance (or paste a single DATABASE_URL).
+      # point at the managed MySQL instance.
       - key: DB_HOST
         sync: false
       - key: DB_PORT
