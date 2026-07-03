@@ -2,17 +2,25 @@
 
 Owner: K.G.C. Ravishan (error check) and P.A.K.N. Dharmarathna (trend).
 
-INTEGRATION STUB created by H.G.P.C. Sagara. This module is imported by
-weights.py and reports.py rather than exposing its own routes. Implement the
-two pure functions below exactly as specified in guideline §5.2 and §5.3 so
-they are easy for QA to unit-test.
+This module is imported by weights.py and reports.py rather than exposing its
+own routes, so the two functions below are plain, easy-to-unit-test Python —
+no Flask request/response objects involved.
 """
+
+from .db import query
+
+REJECT_NOT_POSITIVE = "reject: must be positive"
+WARN_OUT_OF_RANGE = "warn: please confirm"
+OK = "ok"
+
+HISTORY_LIMIT = 10
+MIN_HISTORY_FOR_RANGE_CHECK = 3
+RANGE_MULTIPLIER = 3
 
 
 def check(farmer_id, new_weight):
     """Error/anomaly check for a new weight (guideline §5.2).
 
-    Expected behaviour to implement:
         IF new_weight <= 0:            return 'reject: must be positive'
         history = recent weights (last 10)
         IF len(history) < 3:           return 'ok'
@@ -20,7 +28,28 @@ def check(farmer_id, new_weight):
         IF new_weight > avg*3 or < avg/3: flag + return 'warn: please confirm'
         return 'ok'
     """
-    raise NotImplementedError("Owner: K.G.C. Ravishan — implement per §5.2")
+    if new_weight is None or new_weight <= 0:
+        return REJECT_NOT_POSITIVE
+
+    rows = query(
+        """
+        SELECT weight_kg FROM weight_record
+        WHERE farmer_id = %s
+        ORDER BY date DESC, record_id DESC
+        LIMIT %s
+        """,
+        (farmer_id, HISTORY_LIMIT),
+    )
+    history = [float(row["weight_kg"]) for row in rows]
+
+    if len(history) < MIN_HISTORY_FOR_RANGE_CHECK:
+        return OK
+
+    avg = sum(history) / len(history)
+    if new_weight > avg * RANGE_MULTIPLIER or new_weight < avg / RANGE_MULTIPLIER:
+        return WARN_OUT_OF_RANGE
+
+    return OK
 
 
 def estimate(farmer_id):

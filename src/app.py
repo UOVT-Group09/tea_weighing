@@ -24,7 +24,7 @@ import logging
 
 from flask import Flask, render_template
 
-from . import db
+from . import db, models
 from .auth import bp as auth_bp
 from .auth import ensure_operator_table, login_required
 from .config import Config
@@ -68,9 +68,11 @@ def create_app(config_object=Config):
     register_core_routes(app)
     register_error_handlers(app)
 
-    # Create/seed the operator table on first boot (no-op if DB unavailable).
+    # Create/seed the operator table and the shared schema on first boot
+    # (no-op if the database is unavailable).
     with app.app_context():
         ensure_operator_table()
+        models.init_schema()
 
     return app
 
