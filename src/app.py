@@ -24,7 +24,7 @@ import logging
 
 from flask import Flask, render_template
 
-from . import db, models
+from . import models
 from .auth import bp as auth_bp
 from .auth import ensure_operator_table, login_required
 from .config import Config
@@ -55,9 +55,6 @@ def create_app(config_object=Config):
 
     logging.basicConfig(level=logging.INFO)
 
-    # Wire the database teardown and the shared integration pieces.
-    db.init_app(app)
-
     # Authentication (login/logout/sessions) — always registered.
     app.register_blueprint(auth_bp)
 
@@ -70,9 +67,8 @@ def create_app(config_object=Config):
 
     # Create/seed the operator table and the shared schema on first boot
     # (no-op if the database is unavailable).
-    with app.app_context():
-        ensure_operator_table()
-        models.init_schema()
+    ensure_operator_table()
+    models.init_schema()
 
     return app
 

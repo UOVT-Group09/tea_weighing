@@ -49,8 +49,8 @@ layers stay thin and testable.
 
 `create_app()` in `app.py` is the single wiring point. Each teammate's module
 exposes a Flask `bp` blueprint; the factory registers them all under clean URL
-prefixes (`/farmers`, `/weights`, …), installs the database teardown handler,
-registers authentication, and adds the error handlers. Because every module
+prefixes (`/farmers`, `/weights`, …), registers authentication, and adds the
+error handlers. Because every module
 depends only on the shared `db.py` helpers and the `login_required` decorator,
 teammates can work on separate branches without colliding.
 
@@ -68,7 +68,6 @@ All environment-specific values are read once in `config.py`:
 
 - `SECRET_KEY`, `FLASK_ENV`
 - `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD`
-  (or a single `DATABASE_URL` that the host injects)
 - `DEFAULT_OPERATOR_USERNAME` / `DEFAULT_OPERATOR_PASSWORD`
 
 Locally these come from a `.env` file (see `.env.example`). Secrets are **never
@@ -100,7 +99,7 @@ The app ships with everything needed for a one-click deploy:
 1. Push the repository to GitHub (public, per the submission checklist).
 2. On Render: **New → Blueprint**, select the repo. `render.yaml` provisions
    the web service automatically (root dir `tea_weighing`).
-3. Create a managed MySQL instance and set `DB_*` (or `DATABASE_URL`),
+3. Create a managed MySQL instance and set the `DB_*` variables,
    `SECRET_KEY`, and the default operator variables in the dashboard.
 4. First boot runs `ensure_operator_table()`, which creates the `operator`
    table and seeds the default operator.
