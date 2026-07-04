@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Reports & Trend{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 style="color:#1F3864;">Reports & Trend</h3>
+  <a class="btn btn-sm btn-outline-secondary"
+     href="{{ url_for('reports.charts', **filter_q) }}">
+    Full charts view
+  </a>
+</div>
+
+{% if db_error %}
+<div class="alert alert-danger">Database is unavailable — reports cannot be loaded right now.</div>
+{% else %}
+
+{% include "reports/_filters.html" %}
+
+{# --- Trend section: individual farmer OR all-farmers overview --- #}
+{% if selected_farmer %}
+  {% if trend %}
+    {% set title = selected_farmer.name %}
+    {% include "reports/_trend_card.html" %}
+  {% else %}
+  <div class="card shadow-sm mb-4 trend-card">
+    <div class="card-body">
+      <h5 class="mb-2 trend-title">Trend — {{ selected_farmer.name }}</h5>
+      <p class="text-muted mb-0">Not enough data yet for a trend (need 3+ records).</p>
+    </div>
+  </div>
+  {% endif %}
+{% else %}
+  {# All farmers: combined estimate + per-farmer cards #}
+  <div class="mb-4">
+    <h5 class="mb-3" style="color:#1F3864;">Harvest trend &amp; next-day estimate</h5>
+
+    {% if aggregate_trend %}
+      {% set title = 'All farmers (combined)' %}
+      {% set trend = (aggregate_trend[0], aggregate_trend[1]) %}
+      {% set subtitle = aggregate_trend[2] ~ ' farmers with enough history' %}
+      {% include "reports/_trend_card.html" %}
+    {% else %}
+    <div class="alert alert-light border mb-3">
+      Combined next-day estimate will appear once farmers have 3+ weight records.
+    </div>
+    {% endif %}
+
+    {% if farmer_trends %}
+    <div class="row g-3">
+      {% for ft in farmer_trends %}
+      <div class="col-md-6 col-lg-4">
+        {% if ft.trend %}
+        <div class="card shadow-sm trend-card trend-card-compact h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <h6 class="trend-title mb-1">{{ ft.name }}</h6>
+                <p class="trend-indicator trend-indicator-sm mb-0 {% if ft.trend[1] == 'up' %}trend-up{% else %}trend-down{% endif %}">
+                  {% if ft.trend[1] == 'up' %}↑ up{% else %}↓ down{% endif %}
+                </p>
+              </div>
+              <div class="text-end">
+                <p class="mb-0 small">avg <strong>{{ ft.trend[0] }} kg</strong></p>
+                <p class="text-muted mb-0 small">next ≈ {{ ft.trend[0] }} kg</p>
+              </div>
+            </div>
+            <a href="{{ url_for('reports.index', start=start.isoformat(), end=end.isoformat(), farmer_id=ft.farmer_id) }}"
+               class="stretched-link small" style="color:#548235;">View →</a>
+          </div>
+        </div>
+        {% else %}
+        <div class="card shadow-sm h-100 border-dashed">
+          <div class="card-body">
+            <h6 class="mb-1" style="color:#1F3864;">{{ ft.name }}</h6>
+            <p class="text-muted small mb-0">Need 3+ records for trend</p>
+            <a href="{{ url_for('reports.farmer', farmer_id=ft.farmer_id, start=start.isoformat(), end=end.isoformat()) }}"
+               class="small" style="color:#548235;">View records →</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% elif not farmers %}
+    <p class="text-muted">No farmers registered yet. Add farmers to see individual trends.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="mb-1" style="color:#1F3864;">Collection per day</h5>
+    <p class="text-muted small mb-3">
+      Yield for {{ start.strftime('%d %b') }} – {{ end.strftime('%d %b %Y') }}
+      {% if selected_farmer %} · {{ selected_farmer.name }}{% endif %}
+    </p>
+    {% if chart_values %}
+    <canvas id="dailyChart" height="100"></canvas>
+    <p class="text-muted small fst-italic mt-2 mb-0">
+      Daily totals for the selected date range · tables below
+    </p>
+    {% else %}
+    <p class="text-muted mb-0">No collection data for this date range.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h5 class="mb-0" style="color:#1F3864;">Daily report</h5>
+      {% if selected_farmer %}
+      <a class="btn btn-sm text-white" style="background-color:#548235;"
+         href="{{ url_for('reports.farmer', farmer_id=selected_farmer.farmer_id, start=start.isoformat(), end=end.isoformat()) }}">
+        Full farmer report →
+      </a>
+      {% endif %}
+    </div>
+    {% if rows %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th class="text-end">Total (kg)</th>
+            <th class="text-end">Entries</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.date.strftime('%d %b %Y') }}</td>
+            <td class="text-end">{{ '%.2f'|format(row.total_kg|float) }}</td>
+            <td class="text-end">{{ row.entries }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No weight records in this date range.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if farmers and not selected_farmer %}
+<div class="card shadow-sm mt-4">
+  <div class="card-body">
+    <h5 class="mb-3" style="color:#1F3864;">Browse by farmer</h5>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Farmer</th>
+            <th>Next-day est.</th>
+            <th>Trend</th>
+            <th class="text-end"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ft in farmer_trends %}
+          <tr>
+            <td>{{ ft.name }}</td>
+            <td>
+              {% if ft.trend %}~{{ ft.trend[0] }} kg{% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td>
+              {% if ft.trend %}
+                <span class="{% if ft.trend[1] == 'up' %}trend-up{% else %}trend-down{% endif %} fw-semibold">
+                  {% if ft.trend[1] == 'up' %}↑ up{% else %}↓ down{% endif %}
+                </span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('reports.farmer', farmer_id=ft.farmer_id, start=start.isoformat(), end=end.isoformat()) }}"
+                 class="btn btn-sm btn-outline-secondary">Open</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const form = document.querySelector('.report-filters');
+  if (!form) return;
+  const startInput = form.querySelector('#start');
+  const endInput = form.querySelector('#end');
+  const today = {{ today | tojson }};
+
+  form.querySelectorAll('.preset-range').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const days = parseInt(btn.dataset.days, 10);
+      const end = new Date(today + 'T12:00:00');
+      const start = new Date(end);
+      start.setDate(start.getDate() - days);
+      endInput.value = today;
+      startInput.value = start.toISOString().slice(0, 10);
+      form.submit();
+    });
+  });
+})();
+</script>
+{% if chart_values %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const ctx = document.getElementById('dailyChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ chart_labels | tojson }},
+      datasets: [{
+        label: 'kg collected',
+        data: {{ chart_values | tojson }},
+        backgroundColor: '#9aa5b1',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: 'Date' } },
+        y: { beginAtZero: true, title: { display: true, text: 'kg' } }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}
