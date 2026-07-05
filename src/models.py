@@ -1,6 +1,6 @@
 """Database schema definition for the Tea Leaves Weighing & Smart Records System."""
 
-from src.db import get_db_connection
+from src.db import get_db
 
 # Fully normalised schema per system specification requirements
 SCHEMA_SQL = """
@@ -54,7 +54,7 @@ def init_schema():
     """Initialise and create all structured database tables."""
     conn = None
     try:
-        conn = get_db_connection()
+        conn = get_db()
         cursor = conn.cursor()
         
         # Executes all schema creation queries safely
