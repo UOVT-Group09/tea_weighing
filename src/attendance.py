@@ -1,14 +1,3 @@
-"""
-Plucker attendance module
-
-Owner: D.M.N.K. Disanayaka (Attendance, Validation & Tests)
-
-Features:
-- View today's attendance list
-- Mark attendance (present / absent)
-- Add new pluckers
-"""
-
 from datetime import date as date_cls
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
@@ -18,67 +7,76 @@ from .auth import login_required
 bp = Blueprint("attendance", __name__, url_prefix="/attendance")
 
 
-# 🔹 Show today's attendance page
+# =========================
+# 📌 INDEX - SHOW ATTENDANCE
+# =========================
 @bp.route("/", methods=["GET"])
 @login_required
 def index():
     try:
-        today = date_cls.today()
+        today = date_cls.today().isoformat()
 
-        # Get all pluckers
-        pluckers = query("SELECT * FROM plucker ORDER BY name")
+        # all pluckers
+        pluckers = query("SELECT id, name FROM pluckers ORDER BY name")
 
-        # Get today's attendance records
-        attendance_rows = query(
+        # today's attendance
+        rows = query(
             "SELECT plucker_id, present FROM attendance WHERE date = %s",
             (today,),
         )
 
-        # Convert to dictionary for easy lookup
-        attendance_map = {row["plucker_id"]: row["present"] for row in attendance_rows}
+        attendance_map = {
+            r["plucker_id"]: r["present"] for r in rows
+        }
 
     except DatabaseError as exc:
         flash(str(exc), "danger")
+        today = date_cls.today().isoformat()
         pluckers = []
         attendance_map = {}
-        today = date_cls.today()
 
     return render_template(
         "attendance/index.html",
+        today=today,
         pluckers=pluckers,
         attendance_map=attendance_map,
-        today=today,
     )
 
 
-# 🔹 Mark attendance (insert or update)
+# =========================
+# 📌 MARK ATTENDANCE (UPSERT)
+# =========================
 @bp.route("/mark", methods=["POST"])
 @login_required
 def mark():
     try:
         plucker_id = int(request.form.get("plucker_id"))
         present = request.form.get("present") == "true"
-        day_raw = request.form.get("date")
+        day = request.form.get("date") or date_cls.today().isoformat()
 
-        # Validate date
+        # validate date
         try:
-            day = date_cls.fromisoformat(day_raw)
+            day = date_cls.fromisoformat(day).isoformat()
         except Exception:
-            flash("Invalid date.", "danger")
+            flash("Invalid date format.", "danger")
             return redirect(url_for("attendance.index"))
 
-        if day > date_cls.today():
+        # prevent future date
+        if day > date_cls.today().isoformat():
             flash("Future dates are not allowed.", "danger")
             return redirect(url_for("attendance.index"))
 
-        # UPSERT (insert or update)
+        # UPSERT (MySQL safe)
         execute(
-            "INSERT INTO attendance (plucker_id, date, present) VALUES (%s, %s, %s) "
-            "ON DUPLICATE KEY UPDATE present = VALUES(present)",
+            """
+            INSERT INTO attendance (plucker_id, date, present)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE present = VALUES(present)
+            """,
             (plucker_id, day, present),
         )
 
-        flash("Attendance updated.", "success")
+        flash("Attendance updated successfully.", "success")
 
     except (ValueError, TypeError):
         flash("Invalid input.", "danger")
@@ -89,36 +87,46 @@ def mark():
     return redirect(url_for("attendance.index"))
 
 
-# 🔹 Add new plucker
+# =========================
+# 📌 ADD PLUCKER
+# =========================
 @bp.route("/pluckers/add", methods=["GET", "POST"])
 @login_required
 def add_plucker():
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        rate_raw = request.form.get("daily_rate")
+    try:
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            rate = request.form.get("daily_rate")
 
-        # Validation
-        if not name:
-            flash("Name is required.", "danger")
-            return render_template("attendance/add_plucker.html")
+            # validation
+            if not name:
+                flash("Name is required.", "danger")
+                return redirect(url_for("attendance.add_plucker"))
 
-        try:
-            rate = float(rate_raw)
-            if rate <= 0:
-                raise ValueError
-        except (TypeError, ValueError):
-            flash("Daily rate must be a positive number.", "danger")
-            return render_template("attendance/add_plucker.html")
+            try:
+                rate = float(rate)
+                if rate <= 0:
+                    raise ValueError
+            except:
+                flash("Invalid daily rate.", "danger")
+                return redirect(url_for("attendance.add_plucker"))
 
-        try:
             execute(
                 "INSERT INTO plucker (name, daily_rate) VALUES (%s, %s)",
                 (name, rate),
             )
+
             flash("Plucker added successfully.", "success")
             return redirect(url_for("attendance.index"))
 
-        except DatabaseError as exc:
-            flash(str(exc), "danger")
+        # GET request
+        pluckers = query("SELECT * FROM pluckers ORDER BY id DESC")
 
-    return render_template("attendance/add_plucker.html")
+        return render_template(
+            "attendance/add_plucker.html",
+            pluckers=pluckers
+        )
+
+    except DatabaseError as exc:
+        flash(str(exc), "danger")
+        return render_template("attendance/add_plucker.html", pluckers=[])
