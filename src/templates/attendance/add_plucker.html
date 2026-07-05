@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Plucker</title>
+</head>
+<body>
+
+<h2>Add New Plucker</h2>
+
+<form method="POST">
+    <input type="text" name="name" placeholder="Plucker Name" required>
+    <button type="submit">Add</button>
+</form>
+
+<hr>
+
+<h3>Existing</h3>
+<ul>
+    {% for p in pluckers %}
+        <li>{{ p.name }}</li>
+    {% endfor %}
+</ul>
+
+</body>
+</html>
