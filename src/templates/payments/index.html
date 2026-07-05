@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>💰 Payments & Wages Management</h2>
+        <div class="card bg-dark text-white p-2">
+            <small class="text-muted d-block">Active Tea Price</small>
+            <span class="fs-5 fw-bold">LKR {{ "%.2f"|format(price_per_kg) }} / kg</span>
+        </div>
+    </div>
+
+    <!-- Section 1: Farmer Payments -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">👨‍🌾 Farmer Payments Ledger</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted"><small>* Excludes any weight records flagged as anomalies or errors.</small></p>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Farmer ID</th>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th class="text-end">Total Weight (kg)</th>
+                            <th class="text-end">Total Payable (LKR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for farmer in farmer_payments %}
+                        <tr>
+                            <td>#{{ farmer.farmer_id }}</td>
+                            <td><strong>{{ farmer.name }}</strong></td>
+                            <td>{{ farmer.contact or 'N/A' }}</td>
+                            <td class="text-end fw-bold text-success">{{ "%.2f"|format(farmer.total_kg) }} kg</td>
+                            <td class="text-end fw-bold">{{ "%.2f"|format(farmer.total_amount) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No farmer payment records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Plucker Wages -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">👩‍🌾 Plucker Wages Ledger</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted"><small>* Calculated based on marked attendance and individual daily rates.</small></p>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Plucker ID</th>
+                            <th>Name</th>
+                            <th>Daily Rate (LKR)</th>
+                            <th class="text-center">Days Present</th>
+                            <th class="text-end">Total Wage (LKR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plucker in plucker_wages %}
+                        <tr>
+                            <td>#{{ plucker.plucker_id }}</td>
+                            <td><strong>{{ plucker.name }}</strong></td>
+                            <td>{{ "%.2f"|format(plucker.daily_rate) }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-info text-dark fs-6">{{ plucker.days_present }} Days</span>
+                            </td>
+                            <td class="text-end fw-bold text-primary">{{ "%.2f"|format(plucker.total_wage) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No plucker wage records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
