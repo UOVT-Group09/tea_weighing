@@ -3,10 +3,6 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <h3 style="color:#1F3864;">Reports & Trend</h3>
-  <a class="btn btn-sm btn-outline-secondary"
-     href="{{ url_for('reports.charts', **filter_q) }}">
-    Full charts view
-  </a>
 </div>
 
 {% if db_error %}
@@ -45,9 +41,18 @@
     {% endif %}
 
     {% if farmer_trends %}
-    <div class="row g-3">
+    <div class="farmer-carousel-wrap">
+      <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary farmer-carousel-btn" data-carousel-target="farmerCarousel" data-carousel-dir="prev" aria-label="Scroll farmers left">
+          &larr;
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary farmer-carousel-btn" data-carousel-target="farmerCarousel" data-carousel-dir="next" aria-label="Scroll farmers right">
+          &rarr;
+        </button>
+      </div>
+      <div class="farmer-carousel" id="farmerCarousel">
       {% for ft in farmer_trends %}
-      <div class="col-md-6 col-lg-4">
+      <div class="farmer-carousel__item">
         {% if ft.trend %}
         <div class="card shadow-sm trend-card trend-card-compact h-100">
           <div class="card-body">
@@ -79,6 +84,7 @@
         {% endif %}
       </div>
       {% endfor %}
+      </div>
     </div>
     {% elif not farmers %}
     <p class="text-muted">No farmers registered yet. Add farmers to see individual trends.</p>
@@ -191,6 +197,23 @@
 {% block scripts %}
 <script>
 (function () {
+  const buttons = document.querySelectorAll('.farmer-carousel-btn');
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      const targetId = button.getAttribute('data-carousel-target');
+      const direction = button.getAttribute('data-carousel-dir');
+      const track = document.getElementById(targetId);
+
+      if (!track) return;
+
+      const scrollAmount = Math.round(track.clientWidth * 0.75);
+      track.scrollBy({
+        left: direction === 'next' ? scrollAmount : -scrollAmount,
+        behavior: 'smooth',
+      });
+    });
+  });
+
   const form = document.querySelector('.report-filters');
   if (!form) return;
   const startInput = form.querySelector('#start');
