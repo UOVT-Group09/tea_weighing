@@ -52,10 +52,31 @@ def check(farmer_id, new_weight):
     return OK
 
 
+def get_recent_weights(farmer_id, last_n=7):
+    """Return the most recent weight values for a farmer (newest first)."""
+    rows = query(
+        """
+        SELECT weight_kg FROM weight_record
+        WHERE farmer_id = %s
+        ORDER BY date DESC, record_id DESC
+        LIMIT %s
+        """,
+        (farmer_id, last_n),
+    )
+    return [float(row["weight_kg"]) for row in rows]
+
+
 def estimate(farmer_id):
     """Moving-average trend estimate (guideline §5.3).
 
     Returns (round(moving_avg, 2), 'up'|'down') or None when fewer than 3
     records exist.
     """
-    raise NotImplementedError("Owner: P.A.K.N. Dharmarathna — implement per §5.3")
+    history = get_recent_weights(farmer_id, last_n=7)
+    if len(history) < 3:
+        return None
+
+    moving_avg = sum(history) / len(history)
+    latest = history[0]
+    trend = "up" if latest > moving_avg else "down"
+    return (round(moving_avg, 2), trend)

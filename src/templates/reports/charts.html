@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Reports Charts{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('reports.index', month=month, farmer_id=farmer_id or '') }}"
+     class="text-decoration-none small" style="color:#548235;">← Back to reports</a>
+</div>
+
+<h3 class="mb-4" style="color:#1F3864;">Collection charts</h3>
+
+{% if db_error %}
+<div class="alert alert-danger">Database is unavailable — charts cannot be loaded right now.</div>
+{% else %}
+
+<form method="get" class="row g-3 mb-4">
+  <div class="col-md-4">
+    <label class="form-label" for="month">Date / range</label>
+    <input type="month" class="form-control" id="month" name="month"
+           value="{{ month }}" onchange="this.form.submit()">
+  </div>
+  <div class="col-md-4">
+    <label class="form-label" for="farmer_id">Farmer</label>
+    <select class="form-select" id="farmer_id" name="farmer_id"
+            onchange="this.form.submit()">
+      <option value="">All farmers</option>
+      {% for f in farmers %}
+        <option value="{{ f.farmer_id }}" {% if f.farmer_id == farmer_id %}selected{% endif %}>
+          {{ f.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="mb-1" style="color:#548235;">
+      {% if selected_farmer %}{{ selected_farmer.name }}{% else %}All farmers{% endif %}
+    </h5>
+    <p class="text-muted small mb-3">
+      {{ start.strftime('%d %b %Y') }} – {{ end.strftime('%d %b %Y') }}
+    </p>
+    {% if chart_values %}
+    <canvas id="reportsChart" height="120"></canvas>
+    {% else %}
+    <p class="text-muted mb-0">No data to chart for this period.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if rows %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="mb-3" style="color:#1F3864;">Daily totals</h5>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th class="text-end">Total (kg)</th>
+            <th class="text-end">Entries</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.date.strftime('%d %b %Y') }}</td>
+            <td class="text-end">{{ '%.2f'|format(row.total_kg|float) }}</td>
+            <td class="text-end">{{ row.entries }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if chart_values %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const ctx = document.getElementById('reportsChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ chart_labels | tojson }},
+      datasets: [{
+        label: 'kg',
+        data: {{ chart_values | tojson }},
+        backgroundColor: '#548235',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'kg collected' } }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

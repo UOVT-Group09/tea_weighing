@@ -1,0 +1,20 @@
+{# Wireframe-style trend summary — used for single farmer or aggregate #}
+<div class="card shadow-sm mb-4 trend-card{% if compact %} trend-card-compact{% endif %}">
+  <div class="card-body">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h5 class="mb-2 trend-title">Trend — {{ title }}</h5>
+        <p class="trend-indicator mb-0 {% if trend[1] == 'up' %}trend-up{% else %}trend-down{% endif %}">
+          {% if trend[1] == 'up' %}↑ up{% else %}↓ down{% endif %}
+        </p>
+      </div>
+      <div class="col-md-6 text-md-end trend-stats">
+        <p class="mb-1">moving avg <strong>{{ trend[0] }} kg</strong></p>
+        <p class="text-muted mb-0">est. next ≈ {{ trend[0] }} kg</p>
+        {% if subtitle %}
+        <p class="text-muted small mb-0 mt-1">{{ subtitle }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

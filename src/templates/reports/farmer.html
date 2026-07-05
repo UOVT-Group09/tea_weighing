@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Farmer Report{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('reports.index', **filter_q) }}"
+     class="text-decoration-none small" style="color:#548235;">← Back to reports</a>
+</div>
+
+{% if db_error %}
+<div class="alert alert-danger">Database is unavailable — this report cannot be loaded right now.</div>
+{% elif farmer %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 style="color:#1F3864;">{{ farmer.name }}</h3>
+</div>
+
+<form method="get" class="card shadow-sm mb-4 report-filters">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label" for="start">From</label>
+        <input type="date" class="form-control" id="start" name="start"
+               max="{{ today }}" value="{{ start.isoformat() }}" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="end">To</label>
+        <input type="date" class="form-control" id="end" name="end"
+               max="{{ today }}" value="{{ end.isoformat() }}" required>
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn text-white w-100" style="background-color:#548235;">
+          Apply
+        </button>
+      </div>
+    </div>
+    <p class="text-muted small mb-0 mt-2">
+      {{ start.strftime('%d %b %Y') }} – {{ end.strftime('%d %b %Y') }}
+    </p>
+  </div>
+</form>
+
+{% if trend %}
+  {% set title = farmer.name %}
+  {% include "reports/_trend_card.html" %}
+{% else %}
+<div class="card shadow-sm mb-4 trend-card">
+  <div class="card-body">
+    <h5 class="mb-2 trend-title">Trend — {{ farmer.name }}</h5>
+    <p class="text-muted mb-0">Not enough data yet for a trend (need 3+ records).</p>
+  </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="mb-3" style="color:#1F3864;">Collection per day</h5>
+    {% if chart_values %}
+    <canvas id="farmerChart" height="90"></canvas>
+    {% else %}
+    <p class="text-muted mb-0">No harvest data in this date range.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="mb-3" style="color:#1F3864;">Weight records</h5>
+    {% if records %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th class="text-end">Weight (kg)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in records %}
+          <tr>
+            <td>{{ row.date.strftime('%d %b %Y') }}</td>
+            <td class="text-end">{{ row.weight_kg }}</td>
+            <td>
+              {% if row.flagged %}
+                <span class="badge bg-warning text-dark">flagged</span>
+              {% else %}
+                <span class="badge bg-success">ok</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No records for this farmer in the selected period.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if chart_values %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const ctx = document.getElementById('farmerChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ chart_labels | tojson }},
+      datasets: [{
+        label: 'kg',
+        data: {{ chart_values | tojson }},
+        backgroundColor: '#548235',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'kg' } }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}
