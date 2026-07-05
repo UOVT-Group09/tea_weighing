@@ -23,5 +23,5 @@ def client(app):
 # ✅ fake login helper (IMPORTANT)
 def login(client):
     with client.session_transaction() as sess:
-        sess["user_id"] = 1
-        sess["username"] = "admin"
+        sess["operator_id"] = 1
+        sess["operator_username"] = "admin"
