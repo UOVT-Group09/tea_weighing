@@ -5,7 +5,7 @@ Owner: D.M.N.D. Dissanayaka (DB & Payments).
 
 from flask import Blueprint, render_template, flash, redirect, url_for
 from .auth import login_required
-from .db import execute
+from .db import query
 
 bp = Blueprint("payments", __name__)
 
@@ -15,8 +15,8 @@ def index():
     # 1. Get Active Tea Price
     price_query = "SELECT price_per_kg FROM price_config ORDER BY effective_date DESC, price_id DESC LIMIT 1"
     try:
-        price_result = execute(price_query)
-        price_per_kg = float(price_result[0]['price_per_kg']) if price_result else 250.0
+        price_result = query(price_query, one=True)
+        price_per_kg = float(price_result['price_per_kg']) if price_result else 250.0
     except Exception:
         price_per_kg = 250.0
 
@@ -33,7 +33,7 @@ def index():
         GROUP BY f.farmer_id, f.name, f.contact
     """
     try:
-        farmer_payments = execute(farmer_query, (price_per_kg,))
+        farmer_payments = query(farmer_query, (price_per_kg,))
     except Exception:
         farmer_payments = []
 
@@ -50,7 +50,7 @@ def index():
         GROUP BY p.plucker_id, p.name, p.daily_rate
     """
     try:
-        plucker_wages = execute(plucker_query)
+        plucker_wages = query(plucker_query)
     except Exception:
         plucker_wages = []
 

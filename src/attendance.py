@@ -17,7 +17,7 @@ def index():
         today = date_cls.today().isoformat()
 
         # all pluckers
-        pluckers = query("SELECT id, name FROM pluckers ORDER BY name")
+        pluckers = query("SELECT plucker_id, name FROM plucker ORDER BY name")
 
         # today's attendance
         rows = query(
@@ -120,7 +120,7 @@ def add_plucker():
             return redirect(url_for("attendance.index"))
 
         # GET request
-        pluckers = query("SELECT * FROM pluckers ORDER BY id DESC")
+        pluckers = query("SELECT * FROM plucker ORDER BY plucker_id DESC")
 
         return render_template(
             "attendance/add_plucker.html",

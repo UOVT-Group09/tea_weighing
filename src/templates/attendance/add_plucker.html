@@ -1,25 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Plucker</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Add Plucker{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h4 class="mb-3" style="color:#1F3864;">Add Plucker</h4>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label" for="name">Name *</label>
+            <input class="form-control" id="name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="daily_rate">Daily Rate (LKR) *</label>
+            <input class="form-control" type="number" step="0.01" min="0.01" id="daily_rate" name="daily_rate" required>
+          </div>
+          <button class="btn text-white" style="background-color:#1F3864;">Save</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('attendance.index') }}">Cancel</a>
+        </form>
+      </div>
+    </div>
 
-<h2>Add New Plucker</h2>
-
-<form method="POST">
-    <input type="text" name="name" placeholder="Plucker Name" required>
-    <button type="submit">Add</button>
-</form>
-
-<hr>
-
-<h3>Existing</h3>
-<ul>
-    {% for p in pluckers %}
-        <li>{{ p.name }}</li>
-    {% endfor %}
-</ul>
-
-</body>
-</html>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Existing Pluckers</h5>
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Name</th><th class="text-end">Daily Rate</th></tr>
+          </thead>
+          <tbody>
+            {% for p in pluckers %}
+            <tr>
+              <td>{{ p.name }}</td>
+              <td class="text-end">{{ "%.2f"|format(p.daily_rate) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted text-center">No pluckers yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
