@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👨‍🌾 Farmer Registry</h2>
+        <a href="{{ url_for('farmers.add') }}" class="btn btn-success">+ Add New Farmer</a>
+    </div>
+
+    <!-- Alert Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Farmers Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Contact Number</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for farmer in farmers %}
+                    <tr>
+                        <td>{{ farmer.farmer_id }}</td>
+                        <td>{{ farmer.name }}</td>
+                        <td>{{ farmer.contact if farmer.contact else 'N/A' }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('farmers.edit', farmer_id=farmer.farmer_id) }}" class="btn btn-sm btn-primary">Edit</a>
+                            
+                            <form action="{{ url_for('farmers.delete', farmer_id=farmer.farmer_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this farmer?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">No farmers registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
