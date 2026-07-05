@@ -1,24 +1,62 @@
 """Payment & wage engine.
 
 Owner: D.M.N.D. Dissanayaka (DB & Payments).
-
-INTEGRATION STUB created by H.G.P.C. Sagara. Replace with farmer payment and
-plucker wage calculation (guideline §5.4), excluding flagged weight rows.
 """
 
-from flask import Blueprint, render_template
-
+from flask import Blueprint, render_template, flash, redirect, url_for
 from .auth import login_required
+from .db import execute
 
 bp = Blueprint("payments", __name__)
-
 
 @bp.route("/")
 @login_required
 def index():
+    # 1. Get Active Tea Price
+    price_query = "SELECT price_per_kg FROM price_config ORDER BY effective_date DESC, price_id DESC LIMIT 1"
+    try:
+        price_result = execute(price_query)
+        price_per_kg = float(price_result[0]['price_per_kg']) if price_result else 250.0
+    except Exception:
+        price_per_kg = 250.0
+
+    # 2. Get Farmer Payments
+    farmer_query = """
+        SELECT 
+            f.farmer_id,
+            f.name,
+            f.contact,
+            COALESCE(SUM(w.weight_kg), 0) AS total_kg,
+            COALESCE(SUM(w.weight_kg), 0) * %s AS total_amount
+        FROM farmer f
+        LEFT JOIN weight_record w ON f.farmer_id = w.farmer_id AND w.flagged = 0
+        GROUP BY f.farmer_id, f.name, f.contact
+    """
+    try:
+        farmer_payments = execute(farmer_query, (price_per_kg,))
+    except Exception:
+        farmer_payments = []
+
+    # 3. Get Plucker Wages
+    plucker_query = """
+        SELECT 
+            p.plucker_id,
+            p.name,
+            p.daily_rate,
+            COUNT(a.attendance_id) AS days_present,
+            COUNT(a.attendance_id) * p.daily_rate AS total_wage
+        FROM plucker p
+        LEFT JOIN attendance a ON p.plucker_id = a.plucker_id AND a.present = 1
+        GROUP BY p.plucker_id, p.name, p.daily_rate
+    """
+    try:
+        plucker_wages = execute(plucker_query)
+    except Exception:
+        plucker_wages = []
+
     return render_template(
-        "_placeholder.html",
-        module="Payments & Wages",
-        owner="D.M.N.D. Dissanayaka",
-        todo="Farmer payment + plucker wage; exclude flagged rows; use active price (§5.4).",
+        "payments/index.html",
+        price_per_kg=price_per_kg,
+        farmer_payments=farmer_payments,
+        plucker_wages=plucker_wages
     )
