@@ -110,12 +110,13 @@ class TestReportsRoutes:
         assert b"12.4" in resp.data
         assert b"up" in resp.data
 
+    @patch("src.reports._daily_report")
     @patch("src.reports.query")
     @patch("src.reports._farmer_records")
     @patch("src.reports._farmers")
     @patch("src.reports.checks.estimate")
     def test_farmer_view_shows_records_and_trend(
-        self, mock_estimate, mock_farmers, mock_records, mock_query
+        self, mock_estimate, mock_farmers, mock_records, mock_query, mock_daily
     ):
         _, client = make_client()
         login(client)
@@ -135,6 +136,7 @@ class TestReportsRoutes:
         ]
         mock_farmers.return_value = [{"farmer_id": 1, "name": "R. Perera"}]
         mock_estimate.return_value = (12.0, "down")
+        mock_daily.return_value = []
 
         resp = client.get("/reports/farmer/1?month=2026-06")
         
