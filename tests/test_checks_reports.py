@@ -117,16 +117,15 @@ class TestReportsRoutes:
     def test_farmer_view_shows_records_and_trend(
         self, mock_estimate, mock_farmers, mock_records, mock_query
     ):
-        # (ඔබගේ make_client හා login imports නිවැරදිව ඇති බව සලකන්න)
         _, client = make_client()
         login(client)
         
-        # ✅ FIX: query එක call කරන විදිහ අනුව අදාළ දත්ත වර්ගය යැවීම
+       
         def query_side_effect(sql, *args, **kwargs):
             if "SELECT farmer_id, name" in sql:
-                # ගොවියාගේ විස්තර සඳහා Dictionary එකක් යවන්න
+               
                 return {"farmer_id": 1, "name": "R. Perera"}
-            # අනිත් queries (උදා: _daily_report) සඳහා List එකක් යවන්න
+            
             return [{"date": date(2026, 6, 10), "total_kg": 11.5, "entries": 1}]
             
         mock_query.side_effect = query_side_effect
@@ -139,7 +138,7 @@ class TestReportsRoutes:
 
         resp = client.get("/reports/farmer/1?month=2026-06")
         
-        # ඔබට අවශ්‍ය asserts මෙතනින් පහළ තබා ගන්න
+        
         assert resp.status_code == 200
 
     @patch("src.reports.query")
