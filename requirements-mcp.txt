@@ -1,0 +1,4 @@
+# Optional — only needed to run the MCP server (src/mcp_server.py) so MCP
+# clients such as Claude Desktop can query the system's data.
+# Install with:  pip install -r requirements-mcp.txt
+mcp==1.28.1

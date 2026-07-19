@@ -50,6 +50,7 @@ payments are disputed, and existing tools are too costly or too basic.
 | Attendance | Mark plucker attendance for wage calculation |
 | Reports | Daily and farmer-wise reports, optional charts |
 | Operator login | Session-based authentication, hashed passwords |
+| AI assistant | In-app chatbot with RAG over a built-in manual + read-only data tools; also exposed to MCP clients (see [docs/chatbot_rag_mcp_guide.md](docs/chatbot_rag_mcp_guide.md)) |
 
 ## Tech Stack
 
@@ -123,6 +124,7 @@ cp .env.example .env        # macOS/Linux
 | `SECRET_KEY` | Flask session signing key |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | MySQL connection |
 | `DEFAULT_OPERATOR_USERNAME` / `DEFAULT_OPERATOR_PASSWORD` | Operator seeded on first run |
+| `GROQ_API_KEY` / `CHATBOT_MODEL` | Free Groq API key for the AI assistant (optional — without it the chatbot answers from the built-in manual) |
 
 `.env` is git-ignored — **never commit real credentials.**
 

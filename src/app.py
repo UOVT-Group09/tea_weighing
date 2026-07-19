@@ -37,6 +37,7 @@ from .weights import bp as weights_bp
 from .payments import bp as payments_bp
 from .attendance import bp as attendance_bp
 from .reports import bp as reports_bp
+from .chatbot import bp as chatbot_bp
 
 BLUEPRINTS = [
     (farmers_bp, "/farmers"),
@@ -44,6 +45,7 @@ BLUEPRINTS = [
     (payments_bp, "/payments"),
     (attendance_bp, "/attendance"),
     (reports_bp, "/reports"),
+    (chatbot_bp, "/chatbot"),
 ]
 
 

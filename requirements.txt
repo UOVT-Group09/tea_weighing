@@ -5,6 +5,9 @@ Flask==3.0.2
 mysql-connector-python==9.1.0
 python-dotenv==1.0.1
 
+# Chatbot — calls the free Groq API (see docs/chatbot_rag_mcp_guide.md).
+requests==2.34.2
+
 # Production WSGI server used by the cloud host (Render/Railway).
 # Not required for local development on Windows.
 gunicorn==21.2.0
