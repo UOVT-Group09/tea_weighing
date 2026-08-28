@@ -82,28 +82,36 @@ dashboard.
 - A real stack trace is **never** shown to the operator; the full error is
   written to the server log only.
 
-## 5. Deployment (Render / Railway)
+## 5. Deployment (Vercel + TiDB Cloud)
 
-The app ships with everything needed for a one-click deploy:
+The app deploys as a serverless function — no container, no WSGI server to
+run. Full walkthrough in
+[`deploy_vercel_tidb.md`](deploy_vercel_tidb.md); the moving parts are:
 
-| File              | Purpose                                       |
-|-------------------|-----------------------------------------------|
-| `requirements.txt`| Pinned dependencies (incl. `gunicorn`)        |
-| `wsgi.py`         | WSGI entry — `gunicorn wsgi:app`              |
-| `Procfile`        | Process definition for the web dyno           |
-| `render.yaml`     | Render blueprint: web service + env vars      |
-| `/healthz`        | Health-check endpoint for uptime monitoring   |
+| File              | Purpose                                        |
+|-------------------|------------------------------------------------|
+| `requirements.txt`| Pinned dependencies (Vercel installs these)    |
+| `wsgi.py`         | Entry point — Vercel imports the `app` object  |
+| `vercel.json`     | `maxDuration` for the chatbot + `excludeFiles` |
+| `.python-version` | Pins Python 3.13 (Vercel defaults to 3.12)     |
+| `/healthz`        | Health-check endpoint for uptime monitoring    |
 
 ### Deploy steps
 
-1. Push the repository to GitHub (public, per the submission checklist).
-2. On Render: **New → Blueprint**, select the repo. `render.yaml` provisions
-   the web service automatically (root dir `tea_weighing`).
-3. Create a managed MySQL instance and set the `DB_*` variables,
-   `SECRET_KEY`, and the default operator variables in the dashboard.
-4. First boot runs `ensure_operator_table()`, which creates the `operator`
-   table and seeds the default operator.
+1. Create a TiDB Cloud Starter cluster — MySQL-compatible, but **port 4000**
+   and TLS mandatory (`DB_SSL=1`).
+2. Run `python -m data.check_db` once from your laptop. It calls
+   `init_schema()` and `ensure_operator_table()`, creating the seven tables
+   and seeding the default operator.
+3. Push the repository to GitHub (public, per the submission checklist), then
+   import it at <https://vercel.com/new>.
+4. Set the `DB_*` variables, `SECRET_KEY`, `GROQ_API_KEY`, the default
+   operator variables, and `INIT_SCHEMA=0` in the dashboard.
 5. Verify the live URL and `/healthz`, then share the URL with the lecturer.
+
+`INIT_SCHEMA=0` matters on serverless: the boot-time schema build would
+otherwise rerun on every cold start, and `db.py` opens one connection per
+statement.
 
 ## 6. Local Development
 

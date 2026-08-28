@@ -69,8 +69,14 @@ def create_app(config_object=Config):
 
     # Create/seed the operator table and the shared schema on first boot
     # (no-op if the database is unavailable).
-    ensure_operator_table()
-    models.init_schema()
+    #
+    # Skipped when INIT_SCHEMA=0. A serverless host (Vercel) reruns this on
+    # every cold start, and db.py opens one connection per statement, so ~9
+    # TLS handshakes would land in front of the first request. Set the flag
+    # once the tables exist — see docs/deploy_vercel_tidb.md.
+    if app.config.get("INIT_SCHEMA", True):
+        ensure_operator_table()
+        models.init_schema()
 
     return app
 
@@ -110,7 +116,7 @@ def register_error_handlers(app):
         return render_template("errors/500.html"), 500
 
 
-# Module-level app for WSGI servers (gunicorn src.app:app) and `python -m src.app`.
+# Module-level app for WSGI servers (see wsgi.py) and `python -m src.app`.
 app = create_app()
 
 
