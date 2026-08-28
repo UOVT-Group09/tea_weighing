@@ -2,8 +2,8 @@
 
 Owner: H.G.P.C. Sagara (PM & Integration Dev)
 
-The cloud host (Render/Railway) starts the app with gunicorn:
-    gunicorn wsgi:app
+Vercel's Python runtime detects this file and serves the `app` object
+below as a Vercel Function — see docs/deploy_vercel_tidb.md.
 """
 
 from src.app import app

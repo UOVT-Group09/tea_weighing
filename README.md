@@ -50,6 +50,7 @@ payments are disputed, and existing tools are too costly or too basic.
 | Attendance | Mark plucker attendance for wage calculation |
 | Reports | Daily and farmer-wise reports, optional charts |
 | Operator login | Session-based authentication, hashed passwords |
+| AI assistant | In-app chatbot with RAG over a built-in manual + read-only data tools; also exposed to MCP clients (see [docs/chatbot_rag_mcp_guide.md](docs/chatbot_rag_mcp_guide.md)) |
 
 ## Tech Stack
 
@@ -57,7 +58,7 @@ payments are disputed, and existing tools are too costly or too basic.
 - **Database:** MySQL (`mysql-connector-python`)
 - **Frontend:** Bootstrap 5, Jinja2 templates
 - **Config:** `python-dotenv`
-- **Deployment:** gunicorn on Render / Railway
+- **Deployment:** Vercel (Python runtime) + TiDB Cloud
 
 ## Project Structure
 
@@ -81,9 +82,9 @@ tea_weighing/
 ├── data/               # seed scripts / sample data
 ├── docs/               # architecture, test log
 ├── requirements.txt    # pinned dependencies
-├── wsgi.py             # production entry point
-├── Procfile            # process definition (cloud)
-├── render.yaml         # Render deployment blueprint
+├── wsgi.py             # deployment entry point (Vercel loads `app` here)
+├── vercel.json         # function duration + bundle exclusions
+├── .python-version     # pins Python 3.13 on Vercel
 ├── .env.example        # configuration template
 └── README.md
 ```
@@ -123,6 +124,7 @@ cp .env.example .env        # macOS/Linux
 | `SECRET_KEY` | Flask session signing key |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | MySQL connection |
 | `DEFAULT_OPERATOR_USERNAME` / `DEFAULT_OPERATOR_PASSWORD` | Operator seeded on first run |
+| `GROQ_API_KEY` / `CHATBOT_MODEL` | Free Groq API key for the AI assistant (optional — without it the chatbot answers from the built-in manual) |
 
 `.env` is git-ignored — **never commit real credentials.**
 
@@ -152,14 +154,16 @@ full feature test suite is owned by QA (D.M.N.K. Disanayaka).
 
 ## Deployment
 
-The repo is ready for a one-click deploy on **Render** (or Railway). See
-[`docs/architecture_and_deployment.md`](docs/architecture_and_deployment.md)
-for full steps. In short:
+The repo deploys to **Vercel** with a free **TiDB Cloud** database — no
+Docker, no credit card. See
+[`docs/deploy_vercel_tidb.md`](docs/deploy_vercel_tidb.md) for full steps. In
+short:
 
-1. Push to GitHub (public repository).
-2. Render → **New → Blueprint** → select the repo (`render.yaml` does the rest).
-3. Add a managed MySQL instance and set the `DB_*` / `SECRET_KEY` env vars.
-4. Visit the live URL and `/healthz`, then share the URL with the lecturer.
+1. Create a TiDB Cloud Starter cluster (port 4000, TLS on).
+2. Run `python -m data.check_db` once to build the schema.
+3. Push to GitHub, then import the repo at <https://vercel.com/new>.
+4. Set the `DB_*`, `SECRET_KEY`, `GROQ_API_KEY` and `INIT_SCHEMA=0` variables.
+5. Visit the live URL and `/healthz`, then share the URL with the lecturer.
 
 ## Team & Responsibilities
 

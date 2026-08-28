@@ -51,6 +51,10 @@
     Group 09 — Tea Leaves Weighing &amp; Smart Records System
   </footer>
 
+  {% if g.operator %}
+    {% include "chatbot/widget.html" %}
+  {% endif %}
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   {% block scripts %}{% endblock %}
 </body>
